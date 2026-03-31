@@ -1,0 +1,98 @@
+services:
+  kafka1:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+
+    environment:
+      KAFKA_KRAFT_MODE: 'true'
+
+      CLUSTER_ID: 'wcHfOT7wSd+ol0XGJj9M5A'
+      KAFKA_NODE_ID: 1
+
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9095,2@kafka2:9095
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9095
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9093,EXTERNAL://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+
+    volumes:
+      - kafka1_kraft:/var/lib/kafka/data
+  
+  kafka2:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka2
+    ports:
+      - "9094:9094"
+
+    environment:
+      KAFKA_KRAFT_MODE: 'true'
+
+      CLUSTER_ID: 'wcHfOT7wSd+ol0XGJj9M5A'
+      KAFKA_NODE_ID: 2
+
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9095,2@kafka2:9095
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9093,EXTERNAL://localhost:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+  
+    volumes:
+      - kafka2_kraft:/var/lib/kafka/data
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.8.3
+    container_name: schema-registry
+    depends_on:
+      - kafka1
+      - kafka2
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka1:9093,kafka2:9093
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+  
+  
+  kafka-init:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka-init
+    depends_on:
+      - kafka1
+      - kafka2
+      - schema-registry
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      echo 'Waiting for Kafka to be ready...'
+      cub kafka-ready -b kafka1:9093 2 60
+
+      echo 'Creating topics...'
+      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic orders --partitions 3 --replication-factor 2
+      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic payments --partitions 3 --replication-factor 2
+      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic shipments --partitions 3 --replication-factor 2
+      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic user_aggregates --partitions 3 --replication-factor 2
+      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic revenue_metrics --partitions 3 --replication-factor 2
+      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic error_events --partitions 3 --replication-factor 2
+
+      echo 'All topics created.'
+      kafka-topics --bootstrap-server kafka1:9093 --list
+      "
+    restart: "no"
+
+volumes:
+  kafka1_kraft:
+  kafka2_kraft:
