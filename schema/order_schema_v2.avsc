@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "com.ecommerce",
+  "fields": [
+    {"name": "order_id",  "type": "string"},
+    {"name": "user",      "type": "string"},
+    {"name": "item",      "type": "string"},
+    {"name": "category",  "type": "string"},
+    {"name": "price",     "type": "int"},
+    {"name": "quantity",  "type": "int"},
+    {"name": "timestamp", "type": "double"},
+    {"name": "currency",  "type": ["null", "string"], "default": null}
+  ]
+}
