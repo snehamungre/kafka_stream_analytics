@@ -29,7 +29,7 @@ producer = Producer({**PRODUCER_DEFAULTS})
 
 consumer.subscribe(["orders"])
 
-# --- In-memory state ---
+
 user_aggregates = defaultdict(lambda: {"order_count": 0, "total_revenue": 0})
 revenue_by_minute = defaultdict(int)
 
@@ -40,7 +40,6 @@ def delivery_report(err, msg):
 
 
 def get_minute_bucket(timestamp):
-    """Floors a timestamp to the nearest minute — used as the time window key"""
     return int(timestamp // 60) * 60
 
 
@@ -52,7 +51,6 @@ try:
         if msg is None:
             continue
 
-        # --- Error handling → error_events topic ---
         if msg.error():
             error_event = {"error": str(msg.error()), "timestamp": time.time()}
             producer.produce(
@@ -62,13 +60,11 @@ try:
             )
             continue
 
-        # --- Deserialize Avro message ---
         try:
             order = avro_deserializer(
                 msg.value(), SerializationContext("orders", MessageField.VALUE)
             )
         except Exception as e:
-            # Schema mismatch or corrupt message → send to error_events
             error_event = {
                 "error": str(e),
                 "raw": str(msg.value()),
@@ -82,7 +78,6 @@ try:
             consumer.commit(message=msg)
             continue
 
-        # --- Skip invalid orders (quantity <= 0) ---
         if order["quantity"] <= 0:
             error_event = {
                 "error": "Invalid quantity",
@@ -142,7 +137,6 @@ try:
 
         print(f"📊 Minute {bucket} | Running revenue: ₹{revenue_by_minute[bucket]}")
 
-        # --- Manual offset commit ---
         consumer.commit(message=msg)
 
 except KeyboardInterrupt:

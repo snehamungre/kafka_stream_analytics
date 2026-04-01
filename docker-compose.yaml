@@ -82,8 +82,6 @@ services:
 
       echo 'Creating topics...'
       kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic orders --partitions 3 --replication-factor 2
-      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic payments --partitions 3 --replication-factor 2
-      kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic shipments --partitions 3 --replication-factor 2
       kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic user_aggregates --partitions 3 --replication-factor 2
       kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic revenue_metrics --partitions 3 --replication-factor 2
       kafka-topics --bootstrap-server kafka1:9093 --create --if-not-exists --topic error_events --partitions 3 --replication-factor 2
