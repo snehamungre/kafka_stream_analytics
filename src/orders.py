@@ -4,7 +4,11 @@ import time
 import uuid
 from confluent_kafka import Producer
 
-producer_config = {"bootstrap.servers": "localhost:9092"}
+from config import PRODUCER_DEFAULTS
+
+producer_config = {
+    **PRODUCER_DEFAULTS,
+}
 
 producer = Producer(producer_config)
 

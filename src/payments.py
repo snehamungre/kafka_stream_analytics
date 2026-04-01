@@ -1,15 +1,16 @@
 import json
 import random
-
+from config import CONSUMER_DEFAULTS, PRODUCER_DEFAULTS
 from confluent_kafka import Consumer, Producer
 
 consumer_config = {
-    "bootstrap.servers": "localhost:9092",
+    **CONSUMER_DEFAULTS,
     "group.id": "payments",
-    "auto.offset.reset": "earliest",
 }
 
-producer_config = {"bootstrap.servers": "localhost:9092"}
+producer_config = {
+    **PRODUCER_DEFAULTS,
+}
 
 
 def delivery_report(err, msg):

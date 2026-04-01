@@ -1,10 +1,11 @@
 from confluent_kafka import Consumer
 import json
 
+from config import CONSUMER_DEFAULTS
+
 consumer_config = {
-    "bootstrap.servers": "localhost:9092",
+    **CONSUMER_DEFAULTS,
     "group.id": "validation",
-    "auto.offset.reset": "earliest",
 }
 
 consumer = Consumer(consumer_config)

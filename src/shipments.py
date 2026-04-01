@@ -4,13 +4,16 @@ import uuid
 
 from confluent_kafka import Consumer, Producer
 
+from config import CONSUMER_DEFAULTS, PRODUCER_DEFAULTS
+
 consumer_config = {
-    "bootstrap.servers": "localhost:9092",
     "group.id": "shipments",
-    "auto.offset.reset": "earliest",
+    **CONSUMER_DEFAULTS,
 }
 
-producer_config = {"bootstrap.servers": "localhost:9092"}
+producer_config = {
+    **PRODUCER_DEFAULTS,
+}
 
 
 def delivery_report(err, msg):

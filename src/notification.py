@@ -1,10 +1,11 @@
 from confluent_kafka import Consumer
 import json
 
+from config import CONSUMER_DEFAULTS
+
 consumer_config = {
-    "bootstrap.servers": "localhost:9092",
     "group.id": "notification-group",
-    "auto.offset.reset": "earliest",
+    **CONSUMER_DEFAULTS,
 }
 
 
